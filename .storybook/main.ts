@@ -6,12 +6,10 @@ const config: StorybookConfig = {
         options: {},
     },
     stories: [
-        '../src/**/*.mdx',
         '../src/**/*.stories.@(ts|tsx|js|jsx)',
     ],
     addons: [
         '@storybook/addon-essentials',
-        '@storybook/addon-interactions',
     ],
     async viteFinal(config) {
         return {
