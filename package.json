@@ -1,7 +1,7 @@
 {
   "homepage": "https://github.com/GabrielDeFreitas/kickoff-ui.git",
   "name": "kickoff-ui",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "React components for technical interviews.",
   "scripts": {
     "build": "tsc --emitDeclarationOnly --declaration --outDir dist/types && rollup -c --bundleConfigAsCjs",
