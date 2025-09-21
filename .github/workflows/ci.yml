@@ -2,12 +2,12 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
 
 permissions:
-  contents: write  # precisa para push de versão e deploy do Storybook
+  contents: write
 
 jobs:
   build-deploy:
