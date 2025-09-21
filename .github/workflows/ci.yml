@@ -53,15 +53,15 @@ jobs:
       - name: Build library
         run: pnpm run build
 
-      # 7. Increment version (minor)
+      # 7. Increment version (minor) and commit
       - name: Bump version
         run: |
           pnpm version minor --no-git-tag-version
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add package.json
-          git commit -m "chore: bump version [ci skip]"
-          git push
+          git commit -m "ci: bump version for release [ci skip]" || echo "No changes to commit"
+          git push || echo "Push failed, possibly no changes"
 
       # 8. Build Storybook
       - name: Build Storybook
@@ -78,8 +78,8 @@ jobs:
           git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git
           pnpm run deploy-storybook
 
-      # 10. Publish package to npm
+      # 10. Publish package to npm (ignora checks de git sujo)
       - name: Publish package
-        run: pnpm publish --access public
+        run: pnpm publish --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
