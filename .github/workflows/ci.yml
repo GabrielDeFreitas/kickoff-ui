@@ -2,7 +2,12 @@ name: CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write  # precisa para push de versão e deploy do Storybook
 
 jobs:
   build-deploy:
@@ -10,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout repository
+      # 1. Checkout
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -19,18 +24,36 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
           registry-url: 'https://registry.npmjs.org/'
 
-      # 3. Install dependencies
+      # 3. Setup pnpm
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: false
+
+      # 4. Setup pnpm cache
+      - name: Get pnpm store path
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Cache pnpm store
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      # 5. Install dependencies
       - name: Install dependencies
         run: pnpm install
 
-      # 4. Build the library
+      # 6. Build library
       - name: Build library
         run: pnpm run build
 
-      # 5. Increment version
+      # 7. Increment version (minor)
       - name: Bump version
         run: |
           pnpm version minor --no-git-tag-version
@@ -40,18 +63,18 @@ jobs:
           git commit -m "chore: bump version [ci skip]"
           git push
 
-      # 6. Build Storybook
+      # 8. Build Storybook
       - name: Build Storybook
         run: pnpm run build-storybook
 
-      # 7. Deploy Storybook to GitHub Pages
+      # 9. Deploy Storybook to GitHub Pages
       - name: Deploy Storybook
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           pnpm run deploy-storybook
 
-      # 8. Publish package to npm
+      # 10. Publish package to npm
       - name: Publish package
         run: pnpm publish --access public
         env:
