@@ -6,15 +6,15 @@ on:
 
 jobs:
   build-deploy:
-    name: Build, Storybook & Publish
+    name: Build, Version, Storybook & Publish
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout repository
+      # 1. Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 2: Setup Node.js
+      # 2. Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -22,25 +22,36 @@ jobs:
           cache: 'pnpm'
           registry-url: 'https://registry.npmjs.org/'
 
-      # Step 3: Install dependencies
+      # 3. Install dependencies
       - name: Install dependencies
         run: pnpm install
 
-      # Step 4: Build the library
+      # 4. Build the library
       - name: Build library
         run: pnpm run build
 
-      # Step 5: Build Storybook
+      # 5. Increment version
+      - name: Bump version
+        run: |
+          pnpm version minor --no-git-tag-version
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json
+          git commit -m "chore: bump version [ci skip]"
+          git push
+
+      # 6. Build Storybook
       - name: Build Storybook
         run: pnpm run build-storybook
 
-      # Step 6: Deploy Storybook to GitHub Pages
+      # 7. Deploy Storybook to GitHub Pages
       - name: Deploy Storybook
-        run: npx gh-pages -d storybook-static -r https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/GabrielDeFreitas/kickoff-ui.git
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          pnpm run deploy-storybook
 
-      # Step 7: Publish package to npm
+      # 8. Publish package to npm
       - name: Publish package
         run: pnpm publish --access public
         env:
