@@ -3,16 +3,14 @@ name: CI
 on:
   push:
     branches: [ master ]
-  pull_request:
-    branches: [ master ]
 
 jobs:
-  build-and-deploy:
-    name: Build, Storybook & Deploy
+  build-deploy:
+    name: Build, Storybook & Publish
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the repository
+      # Step 1: Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -22,13 +20,14 @@ jobs:
         with:
           node-version: 20
           cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org/'
 
       # Step 3: Install dependencies
       - name: Install dependencies
         run: pnpm install
 
       # Step 4: Build the library
-      - name: Build project
+      - name: Build library
         run: pnpm run build
 
       # Step 5: Build Storybook
@@ -37,6 +36,12 @@ jobs:
 
       # Step 6: Deploy Storybook to GitHub Pages
       - name: Deploy Storybook
-        run: pnpm run deploy-storybook
+        run: npx gh-pages -d storybook-static -r https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/GabrielDeFreitas/kickoff-ui.git
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 7: Publish package to npm
+      - name: Publish package
+        run: pnpm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
